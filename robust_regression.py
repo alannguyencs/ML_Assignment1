@@ -46,7 +46,11 @@ def compute_theta(polynomial_degree=5, _lambda=10):
     print (f.shape)
 
 
-    theta_hat = linprog(c=f, A_ub=A, b_ub=b, method='simplex')
+    res = linprog(c=f, A_ub=A, b_ub=b, method='simplex')
+    print (res)
+    print (res['x'])
+
+    theta_hat = np.asarray(res['x'][:dimension])
     print (theta_hat)
 
 
