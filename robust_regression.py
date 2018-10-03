@@ -1,5 +1,5 @@
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from scipy.optimize import linprog
 
 
@@ -54,11 +54,11 @@ def compute_theta(polynomial_degree=5, _lambda=10):
 
 
 def visualize_results():
-    theta_hat = np.load('./results/l1_regularized_least_squares.npy')
+    theta_hat = np.load('./results/robust_regression.npy')
     print (theta_hat)
 
-compute_theta()
-# visualize_results()
+# compute_theta()
+visualize_results()
 
 
 #ref: https://docs.scipy.org/doc/scipy/reference/optimize.linprog-simplex.html
