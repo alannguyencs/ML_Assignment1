@@ -1,10 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import linprog
 
 
 
-def compute_theta(polynomial_degree=5):
+def compute_parameters(polynomial_degree=5, alpha=0.88):
     x = np.loadtxt('./data/polydata_data_sampx.txt')
     y = np.loadtxt('./data/polydata_data_sampy.txt')
 
@@ -18,46 +17,21 @@ def compute_theta(polynomial_degree=5):
         phi = np.append(phi, [x ** k], axis=0)
 
     
-
+    #compute sum_
     phi_T = np.transpose(phi)
-    N = phi_T.shape[0]
-    In = np.identity(N)
+    phi_phi_T = np.matmul(phi, phi_T)
+    I_d = np.identity(dimension)
+    sum_hat = np.linalg.inv(1./alpha*I_d + 1./(alpha**2)*phi_phi_T)
 
+    #compute mean_hat
+    mean_hat = 1./(alpha**2) * np.matmul(sum_hat, np.matmul(phi, Y))
 
-    A = np.bmat([[-phi_T, -In], [phi_T, -In]])
-    print (A[0])
-    # A = np.asarray(A)
-    print (A.shape)
-
-    b = np.bmat([[-Y], [Y]])
-    b = (np.asarray(b)).reshape((2*N,))
-    print (b)
-    print (b.shape)
+    return mean_hat, sum_hat
 
 
 
-    Od = np.zeros(dimension)
-    one_n = np.asarray([1 for _ in range(N)])
-    f = np.bmat([[Od], [one_n]])
-    f = (np.asarray(f)).reshape(((dimension+N),))
-    # f_T = np.transpose(f)
-    # print (f_T.shape)
-    print (f)
-    print (f.shape)
 
-
-    res = linprog(c=f, A_ub=A, b_ub=b, method='simplex')
-    print (res)
-    print (res['x'])
-
-    theta_hat = np.asarray(res['x'][:dimension])
-    print (theta_hat)
-
-
-    np.save('./results/robust_regression.npy', theta_hat)
-
-
-def visualize_results(polynomial_degree=5):
+def visualize_results(mean_hat, sum_hat, polynomial_degree=5):
     theta_hat = np.load('./results/robust_regression.npy')
     print(theta_hat)
 
@@ -70,7 +44,14 @@ def visualize_results(polynomial_degree=5):
     for k in range(1, polynomial_degree + 1):
         predicted_phi = np.append(predicted_phi, [gt_x ** k], axis=0)
     predicted_phi_T = np.transpose(predicted_phi)
-    predicted_Y = np.matmul(predicted_phi_T, theta_hat)
+
+    mean_star = np.matmul(predicted_phi_T, mean_hat)
+    sum_star = np.matmul(predicted_phi_T, np.matmul(sum_hat, predicted_phi))
+
+    print (mean_star.shape)
+    print (sum_star.shape)
+
+    predicted_Y = mean_star
 
     # visualize data
     plt.plot(x, y, 'ro', label='samples with noises')
@@ -82,10 +63,5 @@ def visualize_results(polynomial_degree=5):
 
 
 
-# compute_theta()
-visualize_results()
-
-
-#ref: https://docs.scipy.org/doc/scipy/reference/optimize.linprog-simplex.html
-#     http://yetanothermathprogrammingconsultant.blogspot.com/2017/12/scipy-10-linear-programming.html  
-
+mean_hat, sum_hat = compute_parameters()
+visualize_results(mean_hat=mean_hat, sum_hat=sum_hat)
